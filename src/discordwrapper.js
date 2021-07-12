@@ -11,9 +11,12 @@ discordClient.once('ready', () => console.log('Ready!') );
 
 async function createChannel(message, channelName) {
     return await message.guild.channels.create(channelName, { 
-        type: "text", 
+        type: 'text', 
         nsfw: false, 
-        permissionOverwrites: { id: message.guild.roles.highest }
+        permissionOverwrites: { 
+            id: message.guild.roles.highest,
+            allow: ['VIEW_CHANNEL', 'MANAGE_CHANNELS', 'MANAGE_ROLES']
+        }
     });
 }
 
@@ -57,21 +60,27 @@ const getAllChannelMessages = async (channelID) => {
 function generateEmbedMessage(originalMessages) { };
 
 
-const moveMessages = (message) => {
+const moveMessages = async message => {
     
     const args = message.content.split(' ');
 
-    const originChannelID = args[1];
-    const destChannelID = args[2];
-    const messagesFromOriginChannel = await getAllChannelMessages(originChannelID);
-
+    const originChannelID = args[1] || '';
+    const destChannelID = args[2] || '';
     const destChannel = getChannel(destChannelID || 0);
     
     if (!destChannel) destChannel = await createChannel(message, channelName);
     
+    const messagesFromOriginChannel = await getAllChannelMessages(originChannelID);
+
     messagesFromOriginChannel.forEach( async message => {
-        destChannel.
-    })
+        try {
+// TODO: Precisa ser criada uma embed message para enviar para o canal, porque do contrário parece que foi o BOT que escreveu, sem ref. nenhuma a mensagem original
+            await destChannel.send(message);    
+        } catch (error) {
+            console.log(error.message);
+        }
+        
+    });
     
 };
 

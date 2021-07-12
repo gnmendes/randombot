@@ -11,19 +11,16 @@ function isValid(message) {
     return true;
 }
 
-const parse = message => {
+const parse = async message => {
 
     if (!isValid(message)) return;
-    
+    console.log(message.content);
     const commandWithArgs = message.content.slice(prefix.length) || ' ';
     const command = commandWithArgs.split(' ')[0];
 
     const f = commands[command];
-    if (!f) return 'Comando inválido';
-
-    
-
-    f(message);
+    if (!f) message.client.send('Comando inválido');
+    else await f(message);
     
 };
 
