@@ -65,25 +65,21 @@ const getAllChannelMessages = async (channel) => {
     const messages = [];
 
     let isFirst = false;
-    // do {
-        const messagesFounded = await channel.messages.fetch(options) || [new Map()];
-        
-        for ([key, value] of messagesFounded) {
-            
-            if (!isFirst) {
-                isFirst = true;
-                options['before'] = key;
-                console.log('KEY', key);
-                console.log('VALUE', value);
-            }
 
-            if (value) messages.push(value);
-        }
-        isFirst = false;
-        size = messagesFounded.size;
-
-    // }  while (size > 0);
+    const messagesFounded = await channel.messages.fetch(options) || [new Map()];
     
+    for (const [key, value] of messagesFounded) {
+        
+        if (!isFirst) {
+            isFirst = true;
+            options['before'] = key;
+        }
+
+        if (value) messages.push(value);
+    }
+    isFirst = false;
+    size = messagesFounded.size;
+
     console.log(`${messages.length} MESSAGES FOUNDED!`);
     console.log(messages);
 
@@ -118,7 +114,7 @@ function getEmbedMessageBasicProperties(originalMessage) {
 function verifyAndTreatAttachments(attachments) {
     const files = [];
     
-    for ([key, { attachment, name }] of attachments) {
+    for (const [, { attachment, name }] of attachments) {
         const fileInfo = {
             attachment: attachment,
             imageName: name || 'Random image'
@@ -141,7 +137,7 @@ function getEmbedMessage({ color, userID, authorName, content, avatarURL, title,
 }
 
 function addImages(files, embedMessage) {
-    for ( { attachment, imageName } of files) {
+    for ( const { attachment, imageName } of files) {
         embedMessage.setImage(attachment)
                     .addField('Image title', imageName, true);
     }
