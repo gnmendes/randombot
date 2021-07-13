@@ -7,5 +7,7 @@ module.exports = Object.freeze({
     token: process.env.TOKEN,
     prefix: '!',
     channelID: process.env.GENERAL_CHANNELID,
-    channelName:'bkpmsgs'
+    channelName:'bkpmsgs',
+    embedMessageTitle: 'MENSAGEM MOVIDA',
+    color: '#009ff'
 });
