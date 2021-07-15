@@ -9,5 +9,6 @@ module.exports = Object.freeze({
     channelID: process.env.GENERAL_CHANNELID,
     channelName:'bkpmsgs',
     embedMessageTitle: 'MENSAGEM MOVIDA',
-    color: '#009ff'
+    color: '#009ff',
+    expectedError: 'You can only bulk delete messages that are under 14 days old.'
 });

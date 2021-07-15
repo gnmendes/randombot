@@ -1,7 +1,10 @@
-const { token, channelName, embedMessageTitle, color } = require('../config');
+const { token, 
+        channelName, 
+        embedMessageTitle, 
+        color, 
+        expectedError 
+    } = require('../config');
 const Discord = require('discord.js');
-// const EventEmitter = require('events')
-// const eventEmitter = new EventEmitter();
 
 const discordClient = new Discord.Client();
 
@@ -32,14 +35,31 @@ const moveMessages = async message => {
     for (const _message of messagesFromOriginChannel) {
         try {
             const embedMessage = generateEmbedMessage(_message);
-            await destChannel.send(embedMessage);    
+            await notify(destChannel, embedMessage);
         } catch (error) {
             console.log(error);
         }
     }
-    //TODO: rever isso daqui porque channel nao faz sentido enquanto argumento de 'deleteSingleMessage'
-    //TODO: talvez implementar usando evento, idk
-    deleteMessageCommand[messagesFromOriginChannel.length == 1](messagesFromOriginChannel, message.channel);
+    
+    const deleteArgs = {
+        messages: createChunks(messagesFromOriginChannel, 100),
+        channel: originChannel
+    };
+
+    deleteMessageCommand[messagesFromOriginChannel.length == 1](deleteArgs);
+
+    const delEmbedMessage = {
+        embed: {
+            title: 'Deletando mensagens',
+            description: 'O processo de limpeza do canal foi startado e em breve todas essas mensagens serão deletadas',
+            color: '#ff0000'
+        }
+    };
+    notify(originChannel, delEmbedMessage);
+};
+
+async function notify(channel, message) {
+    await channel.send(message);
 };
 
 function getChannel(channelID) {
@@ -62,27 +82,35 @@ async function createChannel(message, channelName) {
     
 };
 
+function createChunks(arr, chunkSize) {
+    const res = [];
+    while (arr.length > 0) {
+        const chunk = arr.splice(0, chunkSize);
+        res.push(chunk);
+    }
+    return res;
+}
+
 const getAllChannelMessages = async (channel) => {
+    let size = 0;
     const options = { limit: 100 };
     const messages = [];
 
-    let isFirst = false;
-    //TODO: Melhorar essa implementação parar ler todas as mensagens
-    const messagesFounded = await channel.messages.fetch(options) || [new Map()];
-    
-    for (const [key, value] of messagesFounded) {
-        
-        if (!isFirst) {
-            isFirst = true;
-            options['before'] = key;
+    do {
+        const messagesFounded = await channel.messages.fetch(options);
+        const lastMessage = messagesFounded.last();
+        options['before'] = lastMessage.id;
+
+        for ([key, value] of messagesFounded) {
+            messages.push(value);
         }
 
-        if (value) messages.push(value);
-    }
-    isFirst = false;
-    size = messagesFounded.size;
+        size = messagesFounded.size;
+
+    }  while (size == 100);
 
     console.log(`${messages.length} MESSAGES FOUNDED!`);
+    console.log(messages);
 
     return messages;
 };
@@ -145,35 +173,42 @@ function addImages(files, embedMessage) {
     return embedMessage;
 };
 
-async function deleteSingleMessage(message, channel) {
-    await message.delete();
+async function deleteSingleMessage({ message }) {
+    try {
+        await message.delete();    
+    } catch (error) {
+        console.log(error.message);
+    }
+    
 }
 
-async function bulkDeleteMessages(messages, channel) {
-    try {
-        await channel.bulkDelete(messages);
-    } catch (error) {
-        console.log('DEU RUIM', error.message);
-        retryIfPossible(error.message, messages, channel);
-    };
+async function bulkDeleteMessages({ messages, channel }) {
+
+    messages.forEach(async message => {
+        try {
+            await channel.bulkDelete(message);
+        } catch (error) {
+            console.log('Erro ao tentar deletar um grupo de mensagens', error.message);
+            retryIfPossible(error.message, message, channel);
+            
+        }
+    });
 };
 
 function retryIfPossible(errorMessage, messages, channel) {
     
-    if (errorMessage === 'You can only bulk delete messages that are under 14 days old.') {
+    if (errorMessage === expectedError) {
         deleteOneByOne(messages, channel);
     };
 };
 
 async function deleteOneByOne(messages, channel) {
-    for (const messages of messages) {
-        deleteSingleMessage(message, channel);
-    }
-        
+    messages.forEach( async message => await deleteSingleMessage({message}));
 };
 
 module.exports = {
     loginOnServer,
     client: discordClient,
-    moveMessages
+    moveMessages,
+    getAllChannelMessages
 };
