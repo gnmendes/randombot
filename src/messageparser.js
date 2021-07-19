@@ -1,6 +1,6 @@
 const { prefix } = require('../config.js');
-
 const { moveMessages } = require('../src/discordwrapper.js');
+
 const commands = {
     mv: moveMessages
 };
@@ -11,16 +11,46 @@ function isValid(message) {
     return true;
 }
 
+function validateArgs(message) {
+    const arguments = message.content.split(' ');
+    return isValid(message) || lengthIsValid(arguments) || argsContent(arguments);
+};
+
+function lengthIsValid(args) {
+  return args.length === 3;
+};
+
+function argsContent(args) {
+    let flag = true;
+    for (const arg in args) {
+        if (!arg) {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
+};
+
 const parse = async message => {
 
-    if (!isValid(message)) return;
-    console.log(message.content);
-    const commandWithArgs = message.content.slice(prefix.length) || ' ';
+    if (!validateArgs(message)) return;
+
+    const msgContent = message.content;
+    console.log(msgContent);
+    const commandWithArgs = msgContent.slice(prefix.length) || ' ';
     const command = commandWithArgs.split(' ')[0];
 
+    const args = msgContent.split(' ');
+
+    const content = {
+        firstArg: args[1],
+        secondArg: args[2],
+        actualMessage: message
+    };
+
     const f = commands[command];
-    if (!f) message.client.send('Comando inválido');
-    else await f(message);
+    if (!f) return;
+    else await f(content);
     
 };
 

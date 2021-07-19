@@ -18,17 +18,14 @@ const deleteMessageCommand = {
 };
 
 
-const moveMessages = async message => {
-    
-    const args = message.content.split(' ');
+const moveMessages = async ({ firstArg, secondArg, actualMessage }) => {
+    const originChannelID = firstArg;
+    const destChannelID = secondArg;
 
-    const originChannelID = args[1] || '';
-    const destChannelID = args[2] || '';
-
-    const originChannel = getChannel(originChannelID || 0);
-    let destChannel = getChannel(destChannelID || 0);
+    const originChannel = getChannel(originChannelID);
+    let destChannel = getChannel(destChannelID);
     
-    if (!destChannel) destChannel = await createChannel(message, channelName);
+    if (!destChannel) destChannel = await createChannel(actualMessage, channelName);
     
     const messagesFromOriginChannel = await getAllChannelMessages(originChannel);
     
