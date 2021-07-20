@@ -2,10 +2,6 @@
 
 ## TODO:
 
-- [ ] Write unit tests for the bot
-- [ ] Fix bug in fetch messages function
-
-## Missing features:
-
-- [x] Create an embed message based on a regular message
-- [x] Delete the copied message
+- [ ] Criar função que caso o segundo argumento não seja submetido no comando `!mv` ela valida se existe ou não o canal:
+    1. Se existir ele pega o canal de alguma forma
+    2. Se não existir ele cria
