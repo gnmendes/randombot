@@ -21,11 +21,28 @@ const deleteMessageCommand = {
 const moveMessages = async ({ firstArg, secondArg, actualMessage }) => {
     const originChannelID = firstArg;
     const destChannelID = secondArg;
+    
+    const channelInfo = actualMessage.client.channels.reduce((accumulator, current) => {
+        if (current.name === channelName) {
+            accumulator['id'] = current.id;
+            accumulator['name'] = current.name;
+        }
+        return accumulator;
+    }, {});
 
+    
     const originChannel = getChannel(originChannelID);
     let destChannel = getChannel(destChannelID);
     
-    if (!destChannel) destChannel = await createChannel(actualMessage, channelName);
+    if (!destChannel) {
+
+        if (channelInfo) {
+            destChannel = channelInfo.id;
+        } else {
+            destChannel = await createChannel(actualMessage, channelName);
+        }
+        
+    }
     
     const messagesFromOriginChannel = await getAllChannelMessages(originChannel);
     
